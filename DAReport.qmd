@@ -1,0 +1,59 @@
+---
+title: "Data Analytics Winter Final Project"
+author: 
+  - Trifanov Matvei
+  - Add you full name here
+abstract: "Executive Summary. <!--For the final version: Write an executive summary here. Write it when you are mostly finished with the main report. It should summarize the question, with what data and how you answer it, and what the result is.-->"
+format:   
+  html: 
+    toc: true
+    toc-depth: 3
+    standalone: true
+    embed-resources: true
+    code-fold: true
+    number-sections: true
+---
+
+```{r}
+#| label: packages-data
+#| message: false
+#| echo: false
+library(tidymodels)
+library(tidyverse)
+library(patchwork)
+library(ggplot2)
+library(readxl)
+library(dplyr)
+library(glue)
+library(knitr)
+library(corrr)
+```
+
+## Introduction
+
+This text will be replace by your introduction.
+
+```{r}
+airlines = read.csv("Data/airlines.csv")
+airports = read.csv("Data/airports.csv")
+flights = read.csv("Data/flights.csv")
+planes = read.csv("Data/planes.csv")
+weather = read.csv("Data/weather.csv")
+
+```
+
+## Data Cleaning
+
+This text will be replace by your text about data import.
+
+```{r}
+
+
+```
+
+## following category
+
+```{r}
+
+
+```
