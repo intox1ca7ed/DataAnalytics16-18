@@ -22,38 +22,194 @@ library(tidymodels)
 library(tidyverse)
 library(patchwork)
 library(ggplot2)
-library(readxl)
 library(dplyr)
 library(glue)
 library(knitr)
 library(corrr)
 ```
 
-## Introduction
+## 1. Introduction
+This Homework Project works with dataframes in the package `nycflights13` about flights, specifically a sample of domestic flights that departed from the three major New York City airports in 2013.
 
-This text will be replace by your introduction.
+
+The data package `nycflights13` contains five tabular data frames. In total there is information about\
+`r nrow(airlines)` **airlines**,\
+`r nrow(airports)` **airports**,\
+`r nrow(flights)` **flights**,\
+`r nrow(planes)` **planes**,\
+and `r nrow(weather)` **weather** observations.
+
+The core dataframe `flights` has the following variables:
+
+`year`, `month`, `day`: Date of departure.\
+`dep_time`, `arr_time`: Actual departure and arrival times (format HHMM or HMM), local time zone.\
+`sched_dep_time`, `sched_arr_time`: Scheduled departure and arrival times (format HHMM or HMM), local time zone.\
+`dep_delay`, `arr_delay`: Departure and arrival delays, in minutes. Negative times represent early departures/arrivals.\
+`carrier`: Two letter carrier abbreviation. See `airlines` dataframe to get the full name.\
+`flight`: Flight number.\
+`tailnum`: Plane tail number. See `planes` for additional metadata.\
+`origin`, `dest`: Origin and destination. See `airports` for additional metadata.\
+`air_time`: Amount of time spent in the air, in minutes.\
+`distance`: Distance between airports, in miles.\
+`hour`, `minute`: Time of scheduled departure broken into hour and minutes.\
+`time_hour`: Scheduled date and hour of the flight as a *POSIXct* date. Along with *origin*, can be used to join flights data to `weather` data.
+
+# 2. Data Load
+
+Load the datasets and libraries.
+Provide a brief explanation of each dataset.
+Code for loading and viewing the data.
 
 ```{r}
-airlines = read.csv("Data/airlines.csv")
-airports = read.csv("Data/airports.csv")
-flights = read.csv("Data/flights.csv")
-planes = read.csv("Data/planes.csv")
-weather = read.csv("Data/weather.csv")
+#| label: data_load
+airlines = read.csv("Data/airlines.csv", sep = ";", header = TRUE)
+airports = read.csv("Data/airports.csv", sep = ";", header = TRUE)
+flights = read.csv("Data/flights.csv", sep = ";", header = TRUE)
+planes = read.csv("Data/planes.csv", sep = ";", header = TRUE)
+weather = read.csv("Data/weather.csv", sep = ";", header = TRUE)
+
+# structure of flights dataset
+str(flights)
+
+# data summary
+summary(planes)
+```
+
+## 3. Data Cleaning
+
+Inspect for missing values, duplicates, and inconsistencies.
+Clean and handle missing data (impute or remove).
+Deal with duplicates and ensure the data is tidy.
+Describe each step and your decisions.
+
+```{r}
+#| label: data_cleaning
+# there we check for missing values in all datasets
+# We use colSums(is.na()) to count the missing values for each column
+cat("Missing values in airlines:\n")
+colSums(is.na(airlines))
+
+cat("Missing values in airports:\n")
+colSums(is.na(airports))
+
+cat("Missing values in flights:\n")
+colSums(is.na(flights))
+
+cat("Missing values in planes:\n")
+colSums(is.na(planes))
+
+cat("Missing values in weather:\n")
+colSums(is.na(weather))
+
+# Check for duplicate rows in each dataset
+# duplicated() returns TRUE for duplicate rows
+cat("\nDuplicate rows in airlines: ", sum(duplicated(airlines)), "\n")
+cat("Duplicate rows in airports: ", sum(duplicated(airports)), "\n")
+cat("Duplicate rows in flights: ", sum(duplicated(flights)), "\n")
+cat("Duplicate rows in planes: ", sum(duplicated(planes)), "\n")
+cat("Duplicate rows in weather: ", sum(duplicated(weather)), "\n")
+
+
+# Remove duplicate rows from datasets if any
+# unique() removes duplicate rows
+airlines_clean = unique(airlines)
+airports_clean = unique(airports)
+flights_clean = unique(flights)
+planes_clean = unique(planes)
+weather_clean = unique(weather)
+
+# Remove rows with too many missing values (e.g., >50% missing)
+# This ensures we don't include incomplete data
+flights_clean = flights_clean[rowSums(is.na(flights_clean)) <= (0.5 * ncol(flights_clean)), ]
+
+# Impute or remove missing values
+# Here, we'll remove rows with missing values for simplicity
+airlines_clean = na.omit(airlines_clean)
+airports_clean = na.omit(airports_clean)
+planes_clean = na.omit(planes_clean)
+
+# For weather and flights, we might need some data imputation
+# Impute numerical columns with mean
+weather_clean$temperature = ifelse(is.na(weather_clean$temperature), 
+                                   mean(weather_clean$temperature, na.rm = TRUE), 
+                                   weather_clean$temperature)
+
+# Impute flights' missing values in numerical columns with median
+# Example: "air_time" (flight time) column
+if ("air_time" %in% colnames(flights_clean)) {
+  flights_clean$air_time = ifelse(is.na(flights_clean$air_time), 
+                                  median(flights_clean$air_time, na.rm = TRUE), 
+                                  flights_clean$air_time)
+}
+
+# Verify the datasets are cleaned
+cat("\nFinal missing values check for flights:\n")
+colSums(is.na(flights_clean))
+
+# Clean column names to avoid issues later
+# This removes spaces and special characters in column names
+colnames(flights_clean) = gsub("[^[:alnum:]_]", "_", colnames(flights_clean))
+
+# Preview cleaned datasets
+head(flights_clean)
+head(weather_clean)
+
+
+
 
 ```
 
-## Data Cleaning
+## 4. Exploratory Data Analysis 
 
-This text will be replace by your text about data import.
+Visualize and summarize each dataset.
+Identify patterns, relationships, and trends.
+Use visualizations (e.g., histograms, scatterplots, bar charts).
+Describe insights from the data exploration. 
 
 ```{r}
+#| label: EDA
 
 
 ```
 
-## following category
+## 5. Data Preprocessing
+
+Encode categorical variables (if applicable).
+Scale/normalize numerical features.
+Merge datasets if needed (e.g., join flights with weather data).
+Feature engineering (derive new variables if useful).
 
 ```{r}
+#| label: preprocessing
+
+```
+
+## 6. Supervised Learning
+
+
+6.1 Regression Task
+
+Choose a continuous target variable (e.g., flight delay time).
+Apply regression models (e.g., linear regression).
+Evaluate performance (RMSE, R², etc.).
+6.2 Classification Task
+
+Select or derive a categorical target variable (e.g., "on-time" vs "delayed").
+Apply classification models (e.g., logistic regression, decision trees).
+Evaluate performance (accuracy, precision, recall, etc.).
+
+```{r}
+#| label: modeling
+
 
 
 ```
+
+## Insights and Discussion
+
+Compare model performance.
+Highlight key findings and insights.
+Discuss any limitations in the analysis.
+
+
+
