@@ -26,6 +26,7 @@ library(dplyr)
 library(glue)
 library(knitr)
 library(corrr)
+library(naniar)
 ```
 
 ## 1. Introduction
@@ -84,77 +85,136 @@ Describe each step and your decisions.
 
 ```{r}
 #| label: data_cleaning
-# there we check for missing values in all datasets
-# We use colSums(is.na()) to count the missing values for each column
-cat("Missing values in airlines:\n")
-colSums(is.na(airlines))
+#Flights data set. Inspecting and cleaning
+#Exploring missing values 
+missing_count_flights <- colSums(is.na(flights))
+print(missing_count_flights)
 
-cat("Missing values in airports:\n")
-colSums(is.na(airports))
-
-cat("Missing values in flights:\n")
-colSums(is.na(flights))
-
-cat("Missing values in planes:\n")
-colSums(is.na(planes))
-
-cat("Missing values in weather:\n")
-colSums(is.na(weather))
-
-# Check for duplicate rows in each dataset
-# duplicated() returns TRUE for duplicate rows
-cat("\nDuplicate rows in airlines: ", sum(duplicated(airlines)), "\n")
-cat("Duplicate rows in airports: ", sum(duplicated(airports)), "\n")
-cat("Duplicate rows in flights: ", sum(duplicated(flights)), "\n")
-cat("Duplicate rows in planes: ", sum(duplicated(planes)), "\n")
-cat("Duplicate rows in weather: ", sum(duplicated(weather)), "\n")
+#visualizing the missing data patterns
+gg_miss_upset(flights) # missing data upset plot
 
 
-# Remove duplicate rows from datasets if any
-# unique() removes duplicate rows
-airlines_clean = unique(airlines)
-airports_clean = unique(airports)
-flights_clean = unique(flights)
-planes_clean = unique(planes)
-weather_clean = unique(weather)
+#checking patterns for missing data values
+missing_dep_arr<- flights %>% 
+  filter(is.na(dep_time)| is.na(arr_time))
 
-# Remove rows with too many missing values (e.g., >50% missing)
-# This ensures we don't include incomplete data
-flights_clean = flights_clean[rowSums(is.na(flights_clean)) <= (0.5 * ncol(flights_clean)), ]
+print("Subset of Rows with missing dep_time: ")
+print(head(missing_dep_arr))
 
-# Impute or remove missing values
-# Here, we'll remove rows with missing values for simplicity
-airlines_clean = na.omit(airlines_clean)
-airports_clean = na.omit(airports_clean)
-planes_clean = na.omit(planes_clean)
+#Checking correlation of missing values
+flights %>% 
+  mutate(missing_dep_time = is.na(dep_time),
+         missing_arr_time = is.na(arr_time),
+         missing_dep_delay = is.na(dep_delay),
+         missing_arr_delay = is.na(arr_delay)) %>%
+  group_by(missing_dep_time) %>%
+  summarise(
+    dep_delay_missing = sum(missing_dep_delay),
+    arr_delay_missing = sum(missing_arr_delay),
+    count = n()
+    )
 
-# For weather and flights, we might need some data imputation
-# Impute numerical columns with mean
-weather_clean$temperature = ifelse(is.na(weather_clean$temperature), 
-                                   mean(weather_clean$temperature, na.rm = TRUE), 
-                                   weather_clean$temperature)
+#exploring rows missing critical information
+#focusing on rows where "dep_time" or "arr_time" are NA
+flights_missing_critical<- flights %>% 
+  filter(is.na(dep_time)|is.na(arr_time))
 
-# Impute flights' missing values in numerical columns with median
-# Example: "air_time" (flight time) column
-if ("air_time" %in% colnames(flights_clean)) {
-  flights_clean$air_time = ifelse(is.na(flights_clean$air_time), 
-                                  median(flights_clean$air_time, na.rm = TRUE), 
-                                  flights_clean$air_time)
-}
+print(paste("Number of Rows Missing dep_time or arr_time: ", nrow(flights_missing_critical)))
 
-# Verify the datasets are cleaned
-cat("\nFinal missing values check for flights:\n")
-colSums(is.na(flights_clean))
+# Calculate the proportion of rows with missing critical columns
+total_rows <- nrow(flights)
+missing_critical_rows <- nrow(flights_missing_critical)
+proportion_missing <- (missing_critical_rows / total_rows) * 100
 
-# Clean column names to avoid issues later
-# This removes spaces and special characters in column names
-colnames(flights_clean) = gsub("[^[:alnum:]_]", "_", colnames(flights_clean))
-
-# Preview cleaned datasets
-head(flights_clean)
-head(weather_clean)
+print(paste("Percentage of Rows with Missing Critical Data: ", round(proportion_missing, 2), "%"))
 
 
+#Removing rows with missing values
+flights_cleaned_removed <- flights %>% 
+  filter(!is.na(dep_time) & !is.na(arr_time))
+
+#checking the removal 
+cat("Rows before removal: ", nrow(flights), "\n")
+cat("Rows after removal: ", nrow(flights_cleaned_removed), "\n")
+
+#checking the missing count after removal
+missing_count_removed <- colSums(is.na(flights_cleaned_removed))
+print(missing_count_removed)
+
+# Imputing missing dep_time and arr_time with the median value
+flights_cleaned_imputed <- flights %>%
+  mutate(
+    dep_time = ifelse(is.na(dep_time), median(dep_time, na.rm = TRUE), dep_time),
+    arr_time = ifelse(is.na(arr_time), median(arr_time, na.rm = TRUE), arr_time)
+  )
+
+# Checking the missing count after imputation
+missing_count_imputed <- colSums(is.na(flights_cleaned_imputed))
+print(missing_count_imputed)
+
+
+# Visualizing the distribution of delays before and after imputation
+ggplot(flights_cleaned_removed, aes(x = dep_delay)) +
+  geom_histogram(binwidth = 10, fill = "skyblue", color = "black", alpha = 0.7) +
+  labs(title = "Departure Delay Distribution (After Removal)", x = "Departure Delay", y = "Count")
+
+ggplot(flights_cleaned_imputed, aes(x = dep_delay)) +
+  geom_histogram(binwidth = 10, fill = "lightgreen", color = "black", alpha = 0.7) +
+  labs(title = "Departure Delay Distribution (After Imputation)", x = "Departure Delay", y = "Count")
+
+# Imputing missing arr_delay and air_time with the median of each column
+flights_cleaned_imputed <- flights_cleaned_imputed %>%
+  mutate(
+    arr_delay = ifelse(is.na(arr_delay), median(arr_delay, na.rm = TRUE), arr_delay),
+    air_time = ifelse(is.na(air_time), median(air_time, na.rm = TRUE), air_time)
+  )
+
+# Checking the missing count after imputing arr_delay and air_time
+missing_count_imputed_after <- colSums(is.na(flights_cleaned_imputed))
+print(missing_count_imputed_after)
+
+# Visualizing the distribution of arr_delay after imputation
+ggplot(flights_cleaned_imputed, aes(x = arr_delay)) +
+  geom_histogram(binwidth = 10, fill = "lightblue", color = "black", alpha = 0.7) +
+  labs(title = "Arrival Delay Distribution (After Imputation)", x = "Arrival Delay", y = "Count")
+
+# Visualizing the distribution of air_time after imputation
+ggplot(flights_cleaned_imputed, aes(x = air_time)) +
+  geom_histogram(binwidth = 10, fill = "lightcoral", color = "black", alpha = 0.7) +
+  labs(title = "Air Time Distribution (After Imputation)", x = "Air Time", y = "Count")
+
+flights_cleaned_removed_tailnum <- flights_cleaned_imputed %>%
+  filter(!is.na(tailnum))
+
+cat("Rows before removal: ", nrow(flights_cleaned_imputed), "\n")
+cat("Rows after removal: ", nrow(flights_cleaned_removed_tailnum), "\n")
+
+#dealing with the missing values in dep_delay
+missing_dep_delay <- flights_cleaned_removed_tailnum %>%
+  filter(is.na(dep_delay))
+
+# Examine if the missing dep_delay values are associated with missing dep_time
+missing_dep_delay %>%
+  summarise(
+    missing_dep_time = sum(is.na(dep_time)),
+    total_missing = n()
+  )
+flights_cleaned_removed_depdelay <- flights_cleaned_removed_tailnum %>%
+  filter(!is.na(dep_delay))
+
+cat("Rows before removal: ", nrow(flights_cleaned_removed_tailnum), "\n")
+cat("Rows after removal: ", nrow(flights_cleaned_removed_depdelay), "\n")
+
+
+# Before imputation or removal
+ggplot(flights_cleaned_removed_tailnum, aes(x = dep_delay)) +
+  geom_histogram(binwidth = 10, fill = "skyblue", color = "black", alpha = 0.7) +
+  labs(title = "Departure Delay Distribution (Before)", x = "Departure Delay", y = "Count")
+
+# After imputation or removal
+ggplot(flights_cleaned_removed_depdelay, aes(x = dep_delay)) +
+  geom_histogram(binwidth = 10, fill = "lightgreen", color = "black", alpha = 0.7) +
+  labs(title = "Departure Delay Distribution (After)", x = "Departure Delay", y = "Count")
 
 
 ```
