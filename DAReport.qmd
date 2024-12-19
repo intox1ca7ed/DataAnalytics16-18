@@ -3,7 +3,7 @@ title: "Data Analytics Final Project"
 author: 
   - Trifanov Matvei
   - Pasindu Perera
-abstract: "This project aimed to analyze flight data from New York City airports to uncover key factors influencing flight delays and build predictive models for both regression and classification tasks. Using five datasets containing flight details, weather conditions, airline information, and more, we conducted thorough data cleaning, preprocessing, and exploratory analysis to ensure data quality and uncover meaningful insights. For the regression task, we focused on predicting flight arrival delays (arr_delay) based on features such as flight distance, weather variables, and airline carriers. Our refined regression model, evaluated using metrics like RMSE and MAE, provided insights into the key contributors to delays, though inherent variability in the data posed challenges. A classification task was also undertaken to categorize flights, offering additional perspectives on the data. Overall, this project demonstrates the application of supervised learning techniques to real-world data, highlighting both the opportunities and limitations of predictive modeling in complex domains."
+abstract: "This project analyzed flight data from New York City airports to identify key factors contributing to flight delays and develop predictive models for both regression and classification purposes. Leveraging five datasets encompassing flight details, weather conditions, airline information, and other relevant attributes, we undertook comprehensive data cleaning, preprocessing, and exploratory analysis to ensure data reliability and derive meaningful insights. The regression analysis focused on forecasting flight arrival delays (arr_delay) using variables such as flight distance, weather conditions, and airline carriers. By evaluating the regression model with metrics like RMSE and MAE, we gained insights into significant contributors to delays, though the data's inherent variability presented challenges. Additionally, a classification model was developed to categorize flights, offering complementary insights into the dataset. This project illustrates the application of supervised learning methodologies to complex, real-world datasets, shedding light on both the potential and limitations of predictive analytics in addressing multifaceted problems."
 format:   
   html: 
     toc: true
@@ -315,7 +315,6 @@ Describe insights from the data exploration.
 | INTRO FOR EDA. LIKE WHY DO WE DO IT |
 | WHAT WE WANNA SEE AND ETC           |
 
-
 ```{r}
 #Average arrival delays by airline
 flights_cleaned %>%
@@ -345,7 +344,8 @@ flights_cleaned %>%
   )
 ```
 
-
+The chart ranks airlines by average arrival delays, with Allegiant Air showing the best performance (-5.9 minutes) and Frontier Airlines the worst (26.2 minutes).
+It highlights variability in airline punctuality, with some airlines arriving early while others face significant delays.
 
 ```{r}
 # Summarizing average delays by destination airport
@@ -381,6 +381,8 @@ flights_cleaned %>%
   )
 
 ```
+
+The chart shows the top 10 domestic destinations with the highest average arrival delays. Sacramento (SMF) has the shortest delay among these destinations (17.7 minutes), while Ponce (PSE) faces the highest average delay (37.3 minutes). This analysis highlights airports with significant delays, offering insights for better resource allocation and scheduling.
 
 ```{r}
 
@@ -425,6 +427,7 @@ flights_cleaned %>%
     panel.grid.minor = element_blank()  # Hide minor gridlines
   )
 ```
+The chart illustrates the proportion of flights classified as on-time or late for each airline carrier. Green bars represent on-time flights, while red bars show late flights. The dashed line indicates the average proportion of late flights across all carriers. Airlines like G4 and YX have a higher proportion of on-time flights, whereas carriers like F9 and HA have a larger share of delayed flights, highlighting variability in punctuality across airlines.
 
 ```{r}
 #Percentage of Late Flights by Origin Airport
@@ -462,6 +465,7 @@ flights_cleaned %>%
   )
 ```
 
+The chart displays the percentage of late flights by origin airport, highlighting the proportion of flights arriving more than 15 minutes late. Each bar represents an origin airport, with the height indicating the percentage of delayed flights. The highest percentage of late flights is evident at specific airports, emphasizing variations in punctuality influenced by airport-specific factors. The percentages are clearly labeled, aiding quick interpretation.
 
 ```{r}
 # Line plot for percentage of flights delayed by day
@@ -497,6 +501,7 @@ flights_cleaned %>%
 
 
 ```
+The line chart illustrates the percentage of flights delayed by day of the month. The trend fluctuates, with the proportion of delays generally ranging between 20% and 30%. Peaks on specific days suggest variations in operational or external factors affecting punctuality. The visualization highlights potential patterns in delays over the month.
 
 ```{r}
 # Line plot for percentage of flights delayed by season
@@ -542,6 +547,7 @@ flights_cleaned %>%
 
 ```
 
+The line chart displays the percentage of flights delayed by season. Delays peak during the summer, with approximately 25% of flights delayed, while the fall has the lowest delay percentage, around 15%. This seasonal trend reflects variations in factors like weather conditions and travel demand.
 
 ```{r}
 # Impact of weather on arrival delay
@@ -584,6 +590,7 @@ ggcorrplot(
   legend.title = "Correlation"   # Legend title
 )
 ```
+The correlation matrix illustrates the relationships between weather variables and arrival delay. Most correlations with arr_delay are weak, with humid showing the strongest positive correlation (0.11), indicating higher delays with increased humidity. Other variables like visib and pressure exhibit minimal or negligible correlation with arrival delays, suggesting limited direct weather impact. The results highlight that while weather factors contribute, they alone do not heavily dictate delays.`
 
 ## Data Preprocessing
 
@@ -820,4 +827,3 @@ cat("AUC:", auc_value, "\n")
 Compare model performance.
 Highlight key findings and insights.
 Discuss any limitations in the analysis.
-
