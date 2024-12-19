@@ -52,7 +52,7 @@ weather = read.csv("Data/weather.csv", sep = ";", header = TRUE)
 
 ## Introduction
 
-This project uses dataframes about flights, specifically a sample of domestic flights departing from the three major New York City airports in 2013.
+This project uses dataframes about flights, specifically a sample of domestic flights departing from the three major New York City airports in 2023.
 
 There are 5 tabular dataframes.
 Some frequencies statistics:\
@@ -801,7 +801,7 @@ The confusion matrix revealed a balanced accuracy of 87.8%, with high sensitivit
 
 *Exclusion of Categorical Features:* Some categorical variables, like specific flight routes or events, were simplified, which may have overlooked complex relationships.
 
-*Temporal Scope:* The analysis is limited to a specific year (2013), potentially reducing generalizability to other time-frames with different traffic or weather patterns.
+*Temporal Scope:* The analysis is limited to a specific year (2023), potentially reducing generalizability to other time-frames with different traffic or weather patterns.
 
 *Complex Interactions:* The models primarily captured linear relationships, which might not fully represent the nonlinear or interactive effects present in the data.
 
