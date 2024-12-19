@@ -3,7 +3,7 @@ title: "Data Analytics Final Project"
 author: 
   - Trifanov Matvei
   - Pasindu Perera
-abstract: "This project analyzed flight data from New York City airports to identify key factors contributing to flight delays and develop predictive models for both regression and classification purposes. Leveraging five datasets encompassing flight details, weather conditions, airline information, and other relevant attributes, we undertook comprehensive data cleaning, preprocessing, and exploratory analysis to ensure data reliability and derive meaningful insights. The regression analysis focused on forecasting flight arrival delays (arr_delay) using variables such as flight distance, weather conditions, and airline carriers. By evaluating the regression model with metrics like RMSE and MAE, we gained insights into significant contributors to delays, though the data's inherent variability presented challenges. Additionally, a classification model was developed to categorize flights, offering complementary insights into the dataset. This project illustrates the application of supervised learning methodologies to complex, real-world datasets, shedding light on both the potential and limitations of predictive analytics in addressing multifaceted problems."
+abstract: "In this project we analyzed flight data from New York City airports to uncover key factors influencing flight delays and build predictive models for both regression and classification tasks. Using five datasets containing flight details, weather conditions, airline information, and more, we conducted thorough data cleaning, preprocessing, and exploratory analysis to ensure data quality and uncover meaningful insights. For the regression task, we focused on predicting flight arrival delays (arr_delay) based on features such as flight distance, weather variables, and airline carriers. Our refined regression model, evaluated using metrics like RMSE and MAE, provided insights into the key contributors to delays, though inherent variability in the data posed challenges. A classification task was also undertaken to categorize flights, offering additional perspectives on the data. Overall, this project demonstrates the application of supervised learning techniques to real-world data, highlighting both the opportunities and limitations of predictive modeling in complex domains."
 format:   
   html: 
     toc: true
@@ -52,17 +52,17 @@ weather = read.csv("Data/weather.csv", sep = ";", header = TRUE)
 
 ## Introduction
 
-This Project works with dataframes about flights, specifically a sample of domestic flights that departed from the three major New York City airports in 2013.
+This project uses dataframes about flights, specifically a sample of domestic flights departing from the three major New York City airports in 2013.
 
-There are 5 tabular data frames.
-In total there is information about\
+There are 5 tabular dataframes.
+Some frequencies statistics:\
 `r nrow(airlines)` **airlines**,\
 `r nrow(airports)` **airports**,\
 `r nrow(flights)` **flights**,\
 `r nrow(planes)` **planes**,\
-and `r nrow(weather)` **weather** observations.
+`r nrow(weather)` **weather** observations.
 
-The core dataframe `flights` has the following variables:
+The main dataframe `flights` has the following variables:
 
 `year`, `month`, `day`: Date of departure.\
 `dep_time`, `arr_time`: Actual departure and arrival times (format HHMM or HMM), local time zone.\
@@ -84,21 +84,16 @@ Along with *origin*, can be used to join flights data to `weather` data.
 
 ## Data Cleaning
 
-In this project, we adopted a structured approach to handle missing values across the datasets, carefully balancing the trade-off between preserving data and maintaining noisiness.
-Specifically, for datasets with multiple variables containing missing values, such as the `flights` and `weather`, we established a threshold.
+In this project, we used a structured strategy to handle missing values across datasets, carefully balancing data preservation and noise.
+For instance, datasets with many variables with missing values, such as `flights` and `weather`, we developed a threshold.
 
-1.  Remove rows where all critical variables are missing: These rows provide no usable information and contribute little to the analysis.
+-   Remove rows in which all critical variables are missing.
+    These rows contain no useful information and add little to the analysis.
 
-2.  Impute rows with partial missing values: For rows where only a few variables are missing (e.g., less than 50%), we applied imputation to preserve the remaining information.
+-   Impute rows with partial missing values: In rows where only a few variables are missing (e.g., less than 50%), we used imputation to preserve the remaining information.
 
 ```{r}
 #| label: missing_data
-
-#####
-##### THIS CHUNK IS COMPLETE. NO NEED TO CHANGE
-#####
-
-
 # there we check for missing values
 # Calculate missing values for the flights dataset
 flights_missing = colSums(is.na(flights))
@@ -128,39 +123,17 @@ For example, in the `weather` dataset, which contains missing values in 9 out of
 -   Retained and imputed rows where fewer than 5 variables were missing.
     Numerical variables were imputed using the mean, as it maintains the central tendency of the data without introducing bias.
 
-This approach strikes a good balance between preserving data and maintaining quality, ensuring that incomplete yet valuable rows are not discarded unnecessarily while avoiding excessive imputation for highly incomplete rows.
+This approach provides a good balance between data preservation and quality maintenance, guaranteeing that incomplete but valuable rows are not deleted unnecessarily while avoiding excessive imputation of very incomplete rows.
 
 ```{r}
-#| label: data_cleaning
-
-get_mode = function(x) {
-  ux = unique(na.omit(x))  # Removes NA + gets unique
-  ux[which.max(tabulate(match(x, ux)))]  # fins the most frequent value
+#| label: flights-cleaning
+#| warning: false
+get_mode = function(x) { # function to find the most frequent value (mode)
+  ux = unique(na.omit(x)) 
+  ux[which.max(tabulate(match(x, ux)))] 
 }
 
-###
-### Flights dataframe. Inspecting and cleaning
-###
-# Exploring and Cleaning Missing Values
-
-# Count missing values for each column
-print(colSums(is.na(flights)))
-
-# Check patterns for missing dep_time or arr_time
-missing_critical <- flights %>% 
-  filter(is.na(dep_time) | is.na(arr_time))
-
-print("Subset of Rows with Missing dep_time or arr_time: ")
-print(head(missing_critical))
-
-# Calculate the proportion of rows with missing critical columns
-total_rows <- nrow(flights)
-missing_critical_rows <- nrow(missing_critical)
-proportion_missing <- (missing_critical_rows / total_rows) * 100
-
-print(paste("Percentage of Rows with Missing Critical Data: ", round(proportion_missing, 2), "%"))
-
-# Cleaning Process
+### Flights cleaning
 
 # Remove rows with missing critical values (dep_time or arr_time)
 flights_cleaned <- flights %>% 
@@ -181,20 +154,13 @@ flights_cleaned <- flights_cleaned %>%
 
 # Final Missing Count Check
 missing_count_final <- colSums(is.na(flights_cleaned))
-print("Final Missing Data Counts After Cleaning: ")
-print(missing_count_final)
+missing_count_final |> kable(caption = "Missing values in flights_cleaned")
+```
 
-# Check the row counts before and after cleaning
-cat("Original Rows: ", nrow(flights), "\n")
-cat("Cleaned Rows: ", nrow(flights_cleaned), "\n")
-
-# we check what columns have missing values
-# then we apply the aforementioned approach
-
-###
+```{r}
+#| label: airports-cleaning
+#| warning: false
 ### Airports cleaning
-###
-
 # we check what columns have missing values
 # then we apply the aforementioned approach again 
 # like we did for flights dataframe
@@ -211,30 +177,27 @@ airports_clean$tzone[is.na(airports_clean$tzone)] = get_mode(airports_clean$tzon
 # Impute dst U = Unknown
 airports_clean$dst[is.na(airports_clean$dst)] = "U"
 
-cat("Missing values after cleaning airports dataset:\n")
-colSums(is.na(airports_clean))
+colSums(is.na(airports_clean)) |> kable(caption = "Missing values in airports_clean")
+```
 
-
-###
-### Planes cleaning
-###
-colSums(is.na(planes)) # 89 out of 4840 observations are missing
+```{r}
+#| label: planes-cleaning
+#| warning: false
+# 89 out of 4840 observations are missing
 # they represent only ~1.8% of the data. Given this small percentage, imputing with the median is our choice
 # Calculate and display the median year for reference
 median_year = median(planes$year, na.rm = TRUE)
-cat("The median year is:", median_year, "\n")
-
 # Impute missing 'year' with the median value
 planes_clean = planes
 planes_clean$year[is.na(planes_clean$year)] = median_year
 
-cat("Missing values after cleaning planes dataset:\n")
-colSums(is.na(planes_clean))
+colSums(is.na(planes_clean)) |> kable(caption = "Missing values in planes_clean")
+```
 
-
-###
+```{r}
+#| label: weather-cleaning
+#| warning: false
 ### Weather cleaning
-###
 
 # Again, we are following our approach by removing observations
 # where >50% of variables are missing
@@ -264,8 +227,7 @@ weather_clean$wind_dir[is.na(weather_clean$wind_dir)] = get_mode(weather_clean$w
 # Imputing precip with 0 = no precipitation
 weather_clean$precip[is.na(weather_clean$precip)] = 0
 
-cat("Missing values after cleaning weather dataset:\n")
-colSums(is.na(weather_clean))
+colSums(is.na(weather_clean)) |> kable(caption = "Missing values after cleaning weather dataset")
 
 #pressure still has 920 NA values left
 # it might not be recognized as numeric
@@ -279,13 +241,8 @@ pressure_median = median(weather_clean$pressure, na.rm = TRUE)
 # Imputing
 weather_clean$pressure[is.na(weather_clean$pressure)] = pressure_median
 
-colSums(is.na(weather_clean)) # full cleaned
+colSums(is.na(weather_clean)) |> kable(caption = "Misssing values in weather_clean")
 ```
-
-|                                                  |
-|--------------------------------------------------|
-| CONCLUSION FROM CLEANING + MAYBE SOME TABLES TO  |
-| SHOW THAT WE DONT HAVE ANY MISSING VALUES NO MO! |
 
 ## Exploratory Data Analysis
 
@@ -366,7 +323,6 @@ Sacramento (SMF) has the shortest delay among these destinations (17.7 minutes),
 This analysis highlights airports with significant delays, offering insights for better resource allocation and scheduling.
 
 ```{r}
-
 # Create an 'is_late' column to indicate whether a flight is late
 flights_cleaned <- flights_cleaned %>%
   mutate(is_late = ifelse(arr_delay > 15, "1", "0"))  # "1" = Late, "0" = On-Time
@@ -385,7 +341,7 @@ flights_cleaned %>%
              lty = 2, size = 1.2, col = "#7D7D7D") +  # Dashed average line in neutral gray
   annotate(geom = "label", x = 4, y = 0.25, 
            label = "Average Proportion", size = 5, 
-           fill = "#7D7D7D", color = "white", fontface = "bold") +  # Annotation with styling
+           fill = "black", color = "white", fontface = "bold") +  # Annotation with styling
   labs(
     title = "<span style='color:#0073C2;'>Proportion of Flights by Carrier</span><br><b>Classed by Lateness</b>",
     x = "Carrier",
@@ -393,7 +349,7 @@ flights_cleaned %>%
     fill = "Lateness"
   ) +
   scale_fill_manual(
-    values = c("1" = "#E74C3C", "0" = "#2E8B57"),  # Custom colors: Orange-red for late, blue-green for on-time
+    values = c("1" = "darkblue", "0" = "darkred"),  # Custom colors: Orange-red for late, blue-green for on-time
     labels = c("On-Time", "Late")  # Custom labels
   ) +
   theme_minimal(base_size = 14) +  # Minimal theme with larger base font
@@ -404,7 +360,7 @@ flights_cleaned %>%
     axis.text = element_text(size = 12, face = "bold"),  # Bold axis text
     legend.title = element_text(size = 12, face = "bold"),  # Bold legend title
     legend.text = element_text(size = 11),  # Larger legend text
-    panel.grid.major = element_line(color = "gray80", linetype = "dashed"),  # Subtle gridlines
+    panel.grid.major = element_line(color = "black", linetype = "dashed"),  # Subtle gridlines
     panel.grid.minor = element_blank()  # Hide minor gridlines
   )
 ```
@@ -465,8 +421,8 @@ flights_cleaned %>%
   ) %>%
   mutate(percentage_delayed = delayed_flights / total_flights) %>%  # Calculate percentage of delayed flights
   ggplot(aes(x = day, y = percentage_delayed)) +
-  geom_line(color = "#0073C2", size = 1.2) +  # Line plot with custom color and size
-  geom_point(size = 3, color = "#E74C3C") +  # Add points for emphasis
+  geom_line(color = "midnightblue", size = 1.2) +  # Line plot with custom color and size
+  geom_point(size = 3, color = "red") +  # Add points for emphasis
   scale_y_continuous(labels = label_percent(), limits = c(0, 0.5)) +  # Format Y-axis as percentage
   scale_x_continuous(breaks = seq(1, 31, 1)) +  # X-axis shows all days of the month
   labs(
@@ -486,8 +442,6 @@ flights_cleaned %>%
     panel.grid.minor = element_blank(),  # Hide minor gridlines
     plot.caption = element_text(size = 10, hjust = 1, color = "gray50")  # Caption styling
   )
-
-
 ```
 
 The line chart illustrates the percentage of flights delayed by day of the month.
@@ -515,8 +469,8 @@ flights_cleaned %>%
   ) %>%
   mutate(percentage_delayed = delayed_flights / total_flights) %>%  # Calculate percentage of delayed flights
   ggplot(aes(x = season, y = percentage_delayed, group = 1)) +  # Group to draw a single line
-  geom_line(color = "#0073C2", size = 1.2) +  # Line plot with custom color and size
-  geom_point(size = 3, color = "#E74C3C") +  # Add points for emphasis
+  geom_line(color = "midnightblue", size = 1.2) +  # Line plot with custom color and size
+  geom_point(size = 3, color = "red") +  # Add points for emphasis
   scale_y_continuous(labels = label_percent(), limits = c(0, 0.5)) +  # Format Y-axis as percentage
   scale_x_discrete(limits = c("Winter", "Spring", "Summer", "Fall")) +  # Ensure correct seasonal order
   labs(
@@ -580,7 +534,7 @@ ggcorrplot(
   type = "full",                  # Show the full symmetric matrix
   lab_size = 3,                   # Set the size of the labels
   title = "Correlation Matrix: Weather and Arrival Delay",  # Plot title
-  colors = c("#1B9E77", "white", "#D95F02"),  # New color gradient: green to orange
+  colors = c("red", "white", "cyan"),  # New color gradient: green to orange
   legend.title = "Correlation"   # Legend title
 )
 ```
@@ -601,8 +555,7 @@ Finally, numerical features such as `distance`, `wind_speed`, `visib`, `precip`,
 ```{r}
 #| label: preprocessing
 # regression preprocessing
-
-# Perform a left join to retain all rows from flights_cleaned
+# left join flights_cleaned and weather_clean
 flights_weather = flights_cleaned |>
   left_join(weather_clean, by = c("time_hour", "origin"))
 
@@ -610,7 +563,7 @@ flights_weather = flights_cleaned |>
 missing_weather = flights_weather |>
   summarize(across(c(wind_speed, visib, precip, temp), ~ sum(is.na(.))))
 
-# Filter out rows with missing weather data (if necessary)
+# Filter out rows with missing weather data
 flights_weather_filtered = flights_weather |>
   filter(!is.na(wind_speed) & !is.na(visib) & !is.na(precip) & !is.na(temp))
 
@@ -625,7 +578,7 @@ flights_weather_filtered = flights_weather_filtered |>
     )
   )
 
-# Convert character columns to numeric
+# character to numeric conversion
 flights_weather_filtered = flights_weather_filtered |>
   mutate(
     temp = as.numeric(gsub(",", ".", temp)),
@@ -634,7 +587,7 @@ flights_weather_filtered = flights_weather_filtered |>
     precip = as.numeric(gsub(",", ".", precip)),
     visib = as.numeric(gsub(",", ".", visib))
   )
-# Normalize the relevant numerical features without modifying the original data
+# normalizing numerical features
 normalize = function(x) {(x - min(x, na.rm = TRUE)) / (max(x, na.rm = TRUE) - min(x, na.rm = TRUE))}
 flights_preprocessed = flights_weather_filtered |>
   mutate(
@@ -645,7 +598,7 @@ flights_preprocessed = flights_weather_filtered |>
     temp_norm = normalize(temp)
   )
 
-set.seed(11111)
+set.seed(11111) #repro
 train_index = createDataPartition(flights_preprocessed$arr_delay, p = 0.8, list = FALSE)
 train_data = flights_preprocessed[train_index, ]
 test_data = flights_preprocessed[-train_index, ]
@@ -661,12 +614,9 @@ We explored feature engineering, refined our model by addressing multicollineari
 
 ```{r}
 #| label: regression-initial
-# linear reg model
-
-# Fit the initial linear regression model
+# creating the initial regression model
 reg_model = lm(arr_delay ~ distance_norm + wind_speed_norm + visib_norm + precip_norm + temp_norm + carrier + part_of_day, data = train_data)
 
-# Summarize the initial model
 tidy(reg_model)
 ```
 
@@ -685,29 +635,29 @@ flights_preprocessed = flights_preprocessed |>
 
 # Fit the refined regression model with significant variables
 reg_model_refined = lm(arr_delay ~ distance_norm + visib_norm + temp_norm + carrier + part_of_day, data = train_data)
-summary(reg_model_refined)
+tidy(reg_model_refined)
 ```
 
 ```{r}
 #| label: regression-interaction
 # Fit a regression model with interaction terms.
 reg_model_interaction = lm(arr_delay ~ distance_norm * part_of_day + visib_norm * temp_norm, data = train_data)
-summary(reg_model_interaction)
+tidy(reg_model_interaction)
 ```
 
 ```{r}
 #| label: regression-metrics
-# Evaluate the refined model on the test data
+# model evaluation
 predictions = predict(reg_model_refined, newdata = test_data)
 
-# Calculate performance metrics
+# metrics and stats
 rmse = sqrt(mean((predictions - test_data$arr_delay)^2, na.rm = TRUE))
 mae = mean(abs(predictions - test_data$arr_delay), na.rm = TRUE)
 r_squared = 1 - sum((predictions - test_data$arr_delay)^2) / sum((test_data$arr_delay - mean(test_data$arr_delay, na.rm = TRUE))^2)
 
-cat("RMSE:", rmse, "\n")
-cat("MAE:", mae, "\n")
-cat("R-squared:", r_squared, "\n")
+cat("RMSE =", rmse, "\n")
+cat("MAE =", mae, "\n")
+cat("R-squared =", r_squared, "\n")
 ```
 
 ### Classification task
